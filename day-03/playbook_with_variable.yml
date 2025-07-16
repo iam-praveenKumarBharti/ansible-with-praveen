@@ -1,0 +1,30 @@
+---
+- name: Install and configure Apache HTTP Server on EC2
+  hosts: webserver
+  gather_facts: yes
+  become: yes
+
+  vars:
+    web_package: httpd
+    web_service: httpd
+    source_file: index.html
+    destination_path: /var/www/html/index.html
+    destination_mode: '0644'
+
+  tasks:
+    - name: Install web server package
+      ansible.builtin.yum:
+        name: "{{ web_package }}"
+        state: present
+
+    - name: Start and enable web server service
+      ansible.builtin.service:
+        name: "{{ web_service }}"
+        state: started
+        enabled: true
+
+    - name: Copy index.html to web server
+      ansible.builtin.copy:
+        src: "{{ source_file }}"
+        dest: "{{ destination_path }}"
+        mode: "{{ destination_mode }}"

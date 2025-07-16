@@ -1,0 +1,65 @@
+---
+# File: deploy_apache.yml
+# This playbook installs Apache2 and deploys a simple static HTML page.
+
+- name: Deploy Apache Web Server on AWS EC2
+  hosts: aws_webservers   # Target the group defined in your inventory
+  become: yes             # Use sudo/root privileges for installation and service management
+  gather_facts: yes       # Gather facts about the remote host (e.g., OS family)
+
+  tasks:
+    - name: Update apt cache (for Debian/Ubuntu)
+      ansible.builtin.apt:
+        update_cache: yes
+      when: ansible_os_family == 'Debian'
+
+    - name: Update yum/dnf cache (for RedHat/CentOS/Amazon Linux)
+      ansible.builtin.yum:
+        update_cache: yes
+      when: ansible_os_family == 'RedHat'
+
+    - name: Install Apache2 (for Debian/Ubuntu)
+      ansible.builtin.package:
+        name: apache2
+        state: present
+      when: ansible_os_family == 'Debian'
+
+    - name: Install httpd (for RedHat/CentOS/Amazon Linux)
+      ansible.builtin.package:
+        name: httpd
+        state: present
+      when: ansible_os_family == 'RedHat'
+
+    - name: Ensure Apache/httpd service is running and enabled on boot (for Debian/Ubuntu)
+      ansible.builtin.service:
+        name: apache2
+        state: started
+        enabled: true
+      when: ansible_os_family == 'Debian'
+
+    - name: Ensure httpd service is running and enabled on boot (for RedHat/CentOS/Amazon Linux)
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+      when: ansible_os_family == 'RedHat'
+
+    - name: Deploy custom index.html
+      ansible.builtin.template: # Use 'template' module for Jinja2 processing
+        src: index.html
+        dest: /var/www/html/index.html # Default web root for Apache/httpd
+        mode: '0644'
+      notify: Restart Apache # This will trigger a handler
+
+  handlers: # Handlers are tasks that are only run when notified
+    - name: Restart Apache
+      ansible.builtin.service:
+        name: apache2
+        state: restarted
+      when: ansible_os_family == 'Debian'
+
+    - name: Restart httpd
+      ansible.builtin.service:
+        name: httpd
+        state: restarted
+      when: ansible_os_family == 'RedHat'

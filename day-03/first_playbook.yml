@@ -1,0 +1,22 @@
+---
+- name: install httpd on EC2
+  hosts: webserver
+  gather_facts: yes
+  become: yes  # Use sudo/root privileges for installation and service management
+  tasks:
+    - name: install httpd
+      ansible.builtin.yum:
+        name: httpd
+        state: present
+
+    - name: start httpd service
+      ansible.builtin.service:
+        name: httpd
+        state: started
+        enabled: true
+
+    - name: copy index.html to web server
+      ansible.builtin.copy:
+        src: index.html
+        dest: /var/www/html/index.html
+        mode: '0644'

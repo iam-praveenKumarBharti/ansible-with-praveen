@@ -1,0 +1,50 @@
+---
+- name: Install and configure Apache HTTP Server on EC2
+  hosts: webserver
+  gather_facts: yes
+  become: yes
+
+  vars:
+    apache_package:
+      RedHat: httpd
+      Debian: apache2
+    apache_service:
+      RedHat: httpd
+      Debian: apache2
+    source_file: index.html
+    destination_path: /var/www/html/index.html
+    destination_mode: '0644'
+
+  tasks:
+    - name: Install Apache package (RedHat-based)
+      ansible.builtin.yum:
+        name: "{{ apache_package['RedHat'] }}"
+        state: present
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Install Apache package (Debian-based)
+      ansible.builtin.apt:
+        name: "{{ apache_package['Debian'] }}"
+        state: present
+        update_cache: yes
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Start and enable Apache service (RedHat-based)
+      ansible.builtin.service:
+        name: "{{ apache_service['RedHat'] }}"
+        state: started
+        enabled: true
+      when: ansible_facts['os_family'] == "RedHat"
+
+    - name: Start and enable Apache service (Debian-based)
+      ansible.builtin.service:
+        name: "{{ apache_service['Debian'] }}"
+        state: started
+        enabled: true
+      when: ansible_facts['os_family'] == "Debian"
+
+    - name: Copy index.html to web server
+      ansible.builtin.copy:
+        src: "{{ source_file }}"
+        dest: "{{ destination_path }}"
+        mode: "{{ destination_mode }}"
