@@ -1,0 +1,14 @@
+all:
+  children:
+    webservers:
+      hosts:
+        web1.example.com:
+          ansible_user: ec2-user
+        192.168.1.10:
+          ansible_user: ubuntu
+    dbservers:
+      hosts:
+        db1.example.com:
+          ansible_user: ec2-user
+        192.168.1.20:
+          ansible_user: ubuntu
